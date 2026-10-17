@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
+import 'screens/auth/login_screen.dart';
 import 'screens/shell/shell.dart';
-import 'screens/welcome/welcome_screen.dart';
+import 'services/auth_service.dart';
 import 'state/app_state.dart';
 import 'theme/app_theme.dart';
 
-void main() => runApp(const RadiantApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await AuthService.init(); // load saved accounts
+  runApp(const RadiantApp());
+}
 
 /// Max width of the app column. On fullscreen / desktop / tablet windows the
 /// UI stays phone-proportioned and centered instead of stretching.
@@ -40,7 +45,8 @@ class RadiantApp extends StatelessWidget {
             ),
           ),
         ),
-        home: app.role == null ? WelcomeScreen() : Shell(),
+        // Login is the first page; the Shell shows once someone is signed in.
+        home: app.role == null ? LoginScreen() : Shell(),
       ),
     );
   }

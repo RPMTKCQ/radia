@@ -63,6 +63,20 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  void signInAuthorized(String email) {
+    role = Role.admin;
+    userEmail = email;
+    tab = 0;
+    notifyListeners();
+  }
+
+  void continueAsDriver() {
+    role = Role.driver;
+    userEmail = null;
+    tab = 0;
+    notifyListeners();
+  }
+
   /// Ends the session (both user types) and returns to the welcome screen.
   void logout() {
     role = null;

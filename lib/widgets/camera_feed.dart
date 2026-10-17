@@ -21,6 +21,7 @@ class CameraFeed extends StatefulWidget {
 class _CameraFeedState extends State<CameraFeed> {
   VideoPlayerController? _c;
   bool _failed = false;
+  String? _error; // last load error, shown on screen to help debugging
 
   @override
   void initState() {
@@ -38,6 +39,7 @@ class _CameraFeedState extends State<CameraFeed> {
     final old = _c;
     _c = null;
     _failed = false;
+    _error = null;
     old?.dispose();
 
     final id = widget.intersection.id;
@@ -46,7 +48,9 @@ class _CameraFeedState extends State<CameraFeed> {
       final c = VideoPlayerController.asset(p);
       try {
         await c.initialize();
-      } catch (_) {
+      } catch (e) {
+        debugPrint('CameraFeed: could not load $p -> $e');
+        _error = '$p: $e';
         await c.dispose();
         continue;
       }
@@ -153,11 +157,15 @@ class _CameraFeedState extends State<CameraFeed> {
             ]),
           ),
           if (_failed)
-            const Positioned(
+            Positioned(
               bottom: 6,
               left: 8,
-              child: Text('No video found. Showing simulated view.',
-                  style: TextStyle(fontSize: 10, color: Colors.white70)),
+              right: 8,
+              child: Text(
+                  'Video failed. Showing simulated view.\n${_error ?? ''}',
+                  maxLines: 4,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 9, color: Colors.white70)),
             ),
         ]),
       ),
