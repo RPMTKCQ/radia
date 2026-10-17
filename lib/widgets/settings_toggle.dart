@@ -23,7 +23,7 @@ class SettingsToggle extends StatelessWidget {
               value: value,
               onChanged: (x) => app.update(() => onChanged(x)),
               activeTrackColor: AppColors.green,
-              activeColor: Colors.white),
+              activeThumbColor: Colors.white),
         ]),
       );
 }

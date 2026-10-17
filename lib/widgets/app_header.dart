@@ -16,7 +16,7 @@ class AppHeader extends StatelessWidget {
               child: Text(title,
                   style: const TextStyle(
                       fontSize: 24, fontWeight: FontWeight.w800))),
-          if (trailing != null) trailing!,
+          ?trailing,
         ]),
       );
 }

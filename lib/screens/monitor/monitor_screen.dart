@@ -4,7 +4,7 @@ import '../../state/app_state.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/agent_card.dart';
 import '../../widgets/app_header.dart';
-import '../../widgets/intersection_painter.dart';
+import '../../widgets/camera_feed.dart';
 import '../../widgets/lane_card.dart';
 import '../../widgets/panel.dart';
 import '../../widgets/pill.dart';
@@ -72,13 +72,7 @@ class MonitorScreen extends StatelessWidget {
                     color: i.statusColor),
               ]),
               const SizedBox(height: 10),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: AspectRatio(
-                  aspectRatio: 1.55,
-                  child: CustomPaint(painter: IntersectionPainter(i.counts, d)),
-                ),
-              ),
+              CameraFeed(intersection: i),
               if (i.idle) ...[
                 const SizedBox(height: 8),
                 Text('No vehicles detected. Signals are flashing yellow.',
