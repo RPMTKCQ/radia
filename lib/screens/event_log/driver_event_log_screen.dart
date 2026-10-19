@@ -4,6 +4,7 @@ import '../../widgets/app_chip.dart';
 import '../../widgets/app_header.dart';
 import '../../widgets/driver_intersection_card.dart';
 import '../../widgets/event_card.dart';
+import '../../widgets/filter_chip_row.dart';
 import '../../widgets/panel.dart';
 import '../../widgets/observe.dart';
 
@@ -25,9 +26,7 @@ class DriverEventLogScreen extends StatelessWidget {
       const AppHeader('Event Log'),
       Expanded(
         child: ListView(padding: const EdgeInsets.all(14), children: [
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(children: [
+          FilterChipRow(children: [
               AppChip('All intersections',
                   selected: app.filter == null,
                   onTap: () => app.update(() => app.filter = null)),
@@ -36,7 +35,6 @@ class DriverEventLogScreen extends StatelessWidget {
                     selected: app.filter == i.id,
                     onTap: () => app.update(() => app.filter = i.id)),
             ]),
-          ),
           const SizedBox(height: 12),
           const Text('Traffic right now',
               style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),

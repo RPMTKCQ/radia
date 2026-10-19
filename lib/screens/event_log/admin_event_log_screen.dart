@@ -3,6 +3,7 @@ import '../../state/app_state.dart';
 import '../../widgets/app_chip.dart';
 import '../../widgets/app_header.dart';
 import '../../widgets/event_card.dart';
+import '../../widgets/filter_chip_row.dart';
 import '../../widgets/intersection_summary_card.dart';
 import '../../widgets/panel.dart';
 import '../../widgets/observe.dart';
@@ -47,9 +48,7 @@ class AdminEventLogScreen extends StatelessWidget {
       const AppHeader('Event Log'),
       Expanded(
         child: ListView(padding: const EdgeInsets.all(14), children: [
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(children: [
+          FilterChipRow(children: [
               AppChip('All intersections',
                   selected: app.filter == null,
                   onTap: () => app.update(() => app.filter = null)),
@@ -58,16 +57,12 @@ class AdminEventLogScreen extends StatelessWidget {
                     selected: app.filter == i.id,
                     onTap: () => app.update(() => app.filter = i.id)),
             ]),
-          ),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(children: [
+          FilterChipRow(children: [
               for (final e in _types.entries)
                 AppChip(e.key,
                     selected: app.typeFilter == e.value,
                     onTap: () => app.update(() => app.typeFilter = e.value)),
             ]),
-          ),
           const SizedBox(height: 10),
           LayoutBuilder(builder: (_, c) {
             final w = (c.maxWidth - 10) / 2;
