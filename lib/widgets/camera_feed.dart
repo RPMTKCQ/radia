@@ -2,90 +2,114 @@ import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import '../models/direction.dart';
 import '../models/intersection.dart';
+import '../services/count_timeline.dart';
+import '../state/app_state.dart';
 import '../theme/app_theme.dart';
-import 'intersection_painter.dart';
 
-/// "CAM-0X live feed": plays a looping intersection video from assets.
-///
-/// Looks for `assets/videos/cam_0ID.mp4` first (ID = intersection number),
-/// then `assets/videos/intersection.mp4`.
-/// If neither exists it falls back to the simulated top-down diagram.
+/// One camera = one lane. Plays  assets/videos/cam_0N.mp4  (N = camera number)
+/// in a loop and, if  assets/counts/cam_0N.json  exists, feeds that lane's
+/// vehicle count to the agent in sync with the video.
+/// Without a counts file the lane keeps simulated numbers.
 class CameraFeed extends StatefulWidget {
   final Intersection intersection;
-  const CameraFeed({super.key, required this.intersection});
+  final Dir lane;
+  const CameraFeed({super.key, required this.intersection, required this.lane});
 
   @override
   State<CameraFeed> createState() => _CameraFeedState();
 }
 
 class _CameraFeedState extends State<CameraFeed> {
+  late final Intersection _x;
+  late final Dir _lane;
   VideoPlayerController? _c;
+  CountTimeline? _timeline;
   bool _failed = false;
-  String? _error; // last load error, shown on screen to help debugging
+  int _lastSec = -1;
+  String? _error;
+
+  int get _cam => _x.cameraNumber(_lane);
 
   @override
   void initState() {
     super.initState();
+    _x = widget.intersection;
+    _lane = widget.lane;
     _load();
   }
 
-  @override
-  void didUpdateWidget(CameraFeed old) {
-    super.didUpdateWidget(old);
-    if (old.intersection.id != widget.intersection.id) _load();
+  void _release() {
+    _c?.removeListener(_onTick);
+    _c?.dispose();
+    _c = null;
+    _timeline = null;
+    _x.videoDriven.remove(_lane); // back to simulation
   }
 
   Future<void> _load() async {
-    final old = _c;
-    _c = null;
-    _failed = false;
-    _error = null;
-    old?.dispose();
-
-    final id = widget.intersection.id;
-    final paths = ['assets/videos/cam_0$id.mp4', 'assets/videos/intersection.mp4'];
-    for (final p in paths) {
-      final c = VideoPlayerController.asset(p);
-      try {
-        await c.initialize();
-      } catch (e) {
-        debugPrint('CameraFeed: could not load $p -> $e');
-        _error = '$p: $e';
-        await c.dispose();
-        continue;
+    final path = 'assets/videos/cam_0$_cam.mp4';
+    final c = VideoPlayerController.asset(path);
+    try {
+      await c.initialize();
+    } catch (e) {
+      debugPrint('CameraFeed: could not load $path -> $e');
+      await c.dispose();
+      if (mounted) {
+        setState(() {
+          _failed = true;
+          _error = '$e';
+        });
       }
-      if (!mounted || widget.intersection.id != id) {
-        await c.dispose();
-        return;
-      }
-      await c.setLooping(true);
-      await c.setVolume(0); // muted so autoplay works on web
-      await c.play();
-      setState(() => _c = c);
       return;
     }
-    if (mounted) setState(() => _failed = true);
+    final timeline = await CountTimeline.load('assets/counts/cam_0$_cam.json');
+    if (!mounted) {
+      await c.dispose();
+      return;
+    }
+    await c.setLooping(true);
+    await c.setVolume(0); // muted so autoplay works on web
+    await c.play();
+
+    _timeline = timeline;
+    c.addListener(_onTick);
+    if (timeline != null) {
+      _x.videoDriven.add(_lane);
+      app.applyCounts(_lane, timeline.at(Duration.zero));
+    }
+    setState(() => _c = c);
+  }
+
+  /// Runs on every video update; only acts once per second.
+  void _onTick() {
+    final c = _c, t = _timeline;
+    if (c == null || t == null || !c.value.isInitialized) return;
+    final sec = c.value.position.inSeconds;
+    if (sec == _lastSec) return;
+    _lastSec = sec;
+    app.applyCounts(_lane, t.at(c.value.position));
   }
 
   @override
   void dispose() {
-    _c?.dispose();
+    _release();
     super.dispose();
   }
 
-  Widget _countChip(String text) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+  Widget _chip(String text) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
         decoration: BoxDecoration(
             color: Colors.black54, borderRadius: BorderRadius.circular(8)),
         child: Text(text,
-            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800)),
+            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800)),
       );
 
   @override
   Widget build(BuildContext context) {
-    final i = widget.intersection;
     final c = _c;
     final playing = c != null && c.value.isInitialized;
+    final count = _x.counts[_lane] ?? 0;
+    final driven = _x.videoDriven.contains(_lane);
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(10),
@@ -103,69 +127,48 @@ class _CameraFeedState extends State<CameraFeed> {
               ),
             )
           else if (_failed)
-            CustomPaint(painter: IntersectionPainter(i.counts, i.decision))
+            Container(
+              color: const Color(0xFF111113),
+              alignment: Alignment.center,
+              padding: const EdgeInsets.all(8),
+              child: Text(
+                  'No video found.\nAdd assets/videos/cam_0$_cam.mp4\n${_error ?? ''}',
+                  textAlign: TextAlign.center,
+                  maxLines: 5,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 9, color: Colors.white70)),
+            )
           else
             const Center(child: CircularProgressIndicator()),
-
-          // Lane counts overlaid on the video
-          if (playing) ...[
-            Positioned(
-                top: 8,
-                left: 0,
-                right: 0,
-                child: Center(child: _countChip('N ${i.counts[Dir.north]}'))),
-            Positioned(
-                bottom: 8,
-                left: 0,
-                right: 0,
-                child: Center(child: _countChip('S ${i.counts[Dir.south]}'))),
-            Positioned(
-                left: 8,
-                top: 0,
-                bottom: 0,
-                child: Center(child: _countChip('W ${i.counts[Dir.west]}'))),
-            Positioned(
-                right: 8,
-                top: 0,
-                bottom: 0,
-                child: Center(child: _countChip('E ${i.counts[Dir.east]}'))),
-            Positioned(
-              right: 4,
-              bottom: 4,
-              child: IconButton(
-                visualDensity: VisualDensity.compact,
-                onPressed: () => setState(
-                    () => c.value.isPlaying ? c.pause() : c.play()),
-                icon: Icon(
-                    c.value.isPlaying ? Icons.pause_circle : Icons.play_circle,
-                    color: Colors.white70),
-              ),
-            ),
-          ],
-
           Positioned(
-            top: 8,
-            left: 8,
+            top: 6,
+            left: 6,
             child: Row(children: [
-              const Icon(Icons.circle, size: 9, color: AppColors.red),
+              const Icon(Icons.circle, size: 8, color: AppColors.red),
               const SizedBox(width: 4),
-              Text('CAM-0${i.id}',
+              Text(_x.cameraLabel(_lane),
                   style: const TextStyle(
-                      fontSize: 11,
+                      fontSize: 10,
                       fontWeight: FontWeight.w800,
                       shadows: [Shadow(blurRadius: 4)])),
             ]),
           ),
-          if (_failed)
+          Positioned(
+              top: 6, right: 6, child: _chip(driven ? 'AI COUNTS' : 'SIMULATED')),
+          Positioned(bottom: 6, left: 6, child: _chip('${_lane.label}  $count')),
+          if (playing)
             Positioned(
-              bottom: 6,
-              left: 8,
-              right: 8,
-              child: Text(
-                  'Video failed. Showing simulated view.\n${_error ?? ''}',
-                  maxLines: 4,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 9, color: Colors.white70)),
+              bottom: 0,
+              right: 0,
+              child: IconButton(
+                visualDensity: VisualDensity.compact,
+                iconSize: 22,
+                onPressed: () =>
+                    setState(() => c.value.isPlaying ? c.pause() : c.play()),
+                icon: Icon(
+                    c.value.isPlaying ? Icons.pause_circle : Icons.play_circle,
+                    color: Colors.white70),
+              ),
             ),
         ]),
       ),

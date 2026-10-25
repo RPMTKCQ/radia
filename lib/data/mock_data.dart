@@ -1,24 +1,38 @@
+import '../models/direction.dart';
 import '../models/intersection.dart';
 import '../models/log_event.dart';
 
-// Replace these with database / camera data later.
-List<Intersection> seedIntersections() => [
-      Intersection(1, 5, 6, 14, 11, 4210, 12),
-      Intersection(2, 12, 9, 4, 3, 3680, 9),
-      Intersection(3, 16, 13, 5, 4, 4590, 15),
-      Intersection(4, 0, 0, 0, 0, 0, 0),
-      Intersection(5, 8, 6, 3, 2, 3950, 7),
-    ];
+// ---------------------------------------------------------------------------
+// THE WHOLE SETUP IS DEFINED HERE.
+//
+// One intersection, 2 to 4 cameras, each camera looks at ONE lane.
+//   camera 1 -> first lane in the list   (assets/videos/cam_01.mp4, assets/counts/cam_01.json)
+//   camera 2 -> second lane              (cam_02 ...)
+//   camera 3 -> third lane               (cam_03 ...)
+//   camera 4 -> fourth lane              (cam_04 ...)   (4 is the maximum)
+// North + South share one signal phase, East + West the other.
+// ---------------------------------------------------------------------------
+// 4 cameras: camera 1 = North, 2 = East, 3 = South, 4 = West.
+// Reorder or remove entries so each camera's lane matches what its video shows.
+const activeLanes = [Dir.north, Dir.east, Dir.south, Dir.west];
+
+Intersection seedIntersection() => Intersection(
+      name: 'Intersection 01',
+      lanes: activeLanes,
+      // starting numbers until a video / AI counts file takes over
+      initial: {Dir.north: 5, Dir.south: 6, Dir.east: 14, Dir.west: 11},
+      adjustments: 12,
+    );
 
 List<LogEvent> seedEvents() => [
-      LogEvent('09:44:30', 5, 'North', 'DENSITY ADJUST',
+      LogEvent('09:44:30', 'North', 'DENSITY ADJUST',
           'Extended North-South green by 6 s'),
-      LogEvent('09:41:05', 1, 'East', 'DENSITY ADJUST',
+      LogEvent('09:41:05', 'East', 'DENSITY ADJUST',
           'Extended East-West green by 10 s'),
-      LogEvent('09:38:52', 2, 'North', 'DENSITY ADJUST',
+      LogEvent('09:38:52', 'North', 'DENSITY ADJUST',
           'Extended North-South green by 8 s'),
-      LogEvent('09:30:47', 3, 'North', 'DENSITY ADJUST',
-          'Switched phase to North-South'),
-      LogEvent('09:12:30', 4, 'All', 'IDLE MODE',
+      LogEvent('09:30:47', 'East', 'DENSITY ADJUST',
+          'Switched phase to East-West'),
+      LogEvent('09:12:30', 'All', 'IDLE MODE',
           'No vehicles: flashing yellow on all approaches'),
     ];

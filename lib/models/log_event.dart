@@ -1,5 +1,4 @@
 class LogEvent {
-  final String time, type, message, lane;
-  final int intersection;
-  LogEvent(this.time, this.intersection, this.lane, this.type, this.message);
+  final String time, lane, type, message;
+  LogEvent(this.time, this.lane, this.type, this.message);
 }

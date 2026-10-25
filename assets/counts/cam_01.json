@@ -1,0 +1,156 @@
+{
+ "duration": 25.013233333333332,
+ "tracking": true,
+ "samples": [
+  {
+   "t": 0,
+   "count": 9,
+   "unique": 12,
+   "max_wait": 0.9
+  },
+  {
+   "t": 1,
+   "count": 10,
+   "unique": 15,
+   "max_wait": 1.3
+  },
+  {
+   "t": 2,
+   "count": 9,
+   "unique": 21,
+   "max_wait": 2.1
+  },
+  {
+   "t": 3,
+   "count": 10,
+   "unique": 24,
+   "max_wait": 2.7
+  },
+  {
+   "t": 4,
+   "count": 10,
+   "unique": 26,
+   "max_wait": 3.3
+  },
+  {
+   "t": 5,
+   "count": 11,
+   "unique": 30,
+   "max_wait": 3.8
+  },
+  {
+   "t": 6,
+   "count": 11,
+   "unique": 32,
+   "max_wait": 4.3
+  },
+  {
+   "t": 7,
+   "count": 10,
+   "unique": 35,
+   "max_wait": 5.0
+  },
+  {
+   "t": 8,
+   "count": 11,
+   "unique": 35,
+   "max_wait": 5.8
+  },
+  {
+   "t": 9,
+   "count": 12,
+   "unique": 37,
+   "max_wait": 7.2
+  },
+  {
+   "t": 10,
+   "count": 11,
+   "unique": 40,
+   "max_wait": 8.1
+  },
+  {
+   "t": 11,
+   "count": 11,
+   "unique": 42,
+   "max_wait": 9.0
+  },
+  {
+   "t": 12,
+   "count": 11,
+   "unique": 44,
+   "max_wait": 9.7
+  },
+  {
+   "t": 13,
+   "count": 11,
+   "unique": 47,
+   "max_wait": 10.4
+  },
+  {
+   "t": 14,
+   "count": 11,
+   "unique": 48,
+   "max_wait": 11.2
+  },
+  {
+   "t": 15,
+   "count": 11,
+   "unique": 51,
+   "max_wait": 12.0
+  },
+  {
+   "t": 16,
+   "count": 10,
+   "unique": 52,
+   "max_wait": 12.9
+  },
+  {
+   "t": 17,
+   "count": 8,
+   "unique": 55,
+   "max_wait": 13.6
+  },
+  {
+   "t": 18,
+   "count": 9,
+   "unique": 58,
+   "max_wait": 14.3
+  },
+  {
+   "t": 19,
+   "count": 8,
+   "unique": 60,
+   "max_wait": 15.2
+  },
+  {
+   "t": 20,
+   "count": 8,
+   "unique": 61,
+   "max_wait": 16.0
+  },
+  {
+   "t": 21,
+   "count": 9,
+   "unique": 65,
+   "max_wait": 16.9
+  },
+  {
+   "t": 22,
+   "count": 10,
+   "unique": 71,
+   "max_wait": 17.8
+  },
+  {
+   "t": 23,
+   "count": 11,
+   "unique": 74,
+   "max_wait": 18.3
+  },
+  {
+   "t": 24,
+   "count": 10,
+   "unique": 76,
+   "max_wait": 19.0
+  }
+ ]
+}

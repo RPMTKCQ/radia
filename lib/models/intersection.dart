@@ -4,22 +4,36 @@ import '../theme/app_theme.dart';
 import 'decision.dart';
 import 'direction.dart';
 
+/// ONE intersection watched by 2 to 4 cameras. Each camera looks at ONE lane.
+/// Camera 1 watches lanes[0], camera 2 watches lanes[1], and so on.
 class Intersection {
-  final int id;
-  final Map<Dir, int> counts;
-  int vehiclesToday, adjustments;
+  final String name;
+  final List<Dir> lanes;
+  final Map<Dir, int> counts; // vehicles currently detected per lane
+  final Set<Dir> videoDriven = {}; // lanes whose count comes from a video's AI file
+  int adjustments;
 
-  Intersection(this.id, int n, int s, int e, int w, this.vehiclesToday,
-      this.adjustments)
-      : counts = {Dir.north: n, Dir.south: s, Dir.east: e, Dir.west: w};
+  Intersection({
+    required this.name,
+    required this.lanes,
+    required Map<Dir, int> initial,
+    this.adjustments = 0,
+  })  : assert(lanes.length >= 2 && lanes.length <= 4,
+            'an intersection needs 2 to 4 lanes / cameras'),
+        counts = {for (final l in lanes) l: initial[l] ?? 0};
 
-  String get name => 'Intersection ${id.toString().padLeft(2, '0')}';
+  int cameraNumber(Dir lane) => lanes.indexOf(lane) + 1;
+  String cameraLabel(Dir lane) => 'CAM-0${cameraNumber(lane)}';
+
   Decision get decision => TrafficAgent.decide(counts);
   int get total => counts.values.fold(0, (a, b) => a + b);
   bool get idle => total == 0;
-  bool get heavy => total >= 40 || counts.values.any((v) => v >= 15);
+  bool get heavy =>
+      counts.values.any((v) => v >= 15) || total >= 12 * lanes.length;
+
   Dir get busiestLane =>
-      counts.entries.reduce((a, b) => b.value > a.value ? b : a).key;
+      lanes.reduce((a, b) => counts[b]! > counts[a]! ? b : a);
+
   String get advice => idle
       ? 'Clear. No vehicles detected.'
       : (heavy
