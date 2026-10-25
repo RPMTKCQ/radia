@@ -3,12 +3,13 @@ import '../../state/app_state.dart';
 import '../../widgets/app_chip.dart';
 import '../../widgets/app_header.dart';
 import '../../widgets/event_card.dart';
-import '../../widgets/intersection_summary_card.dart';
-import '../../widgets/panel.dart';
+import '../../widgets/filter_chip_row.dart';
+import '../../widgets/lane_summary_card.dart';
 import '../../widgets/observe.dart';
+import '../../widgets/panel.dart';
 
-/// Full log for authorized users: filters by intersection and event type,
-/// daily stats, and links to the live monitor.
+/// Full log for authorized users: every lane / camera, filters by event type,
+/// and links back to the cameras.
 class AdminEventLogScreen extends StatelessWidget {
   const AdminEventLogScreen({super.key});
 
@@ -17,6 +18,9 @@ class AdminEventLogScreen extends StatelessWidget {
     'Density adjust': 'DENSITY ADJUST',
     'Idle mode': 'IDLE MODE',
   };
+
+  @override
+  Widget build(BuildContext context) => Observe(builder: _build);
 
   Widget _empty() => Panel(
         padding: const EdgeInsets.symmetric(vertical: 34),
@@ -34,49 +38,33 @@ class AdminEventLogScreen extends StatelessWidget {
         ),
       );
 
-  @override
-  Widget build(BuildContext context) => Observe(builder: _build);
-
   Widget _build(BuildContext context) {
-    final list = app.intersections
-        .where((i) => app.filter == null || i.id == app.filter)
-        .toList();
+    final x = app.intersection;
     final evs = app.filteredEvents;
 
     return Column(children: [
       const AppHeader('Event Log'),
       Expanded(
         child: ListView(padding: const EdgeInsets.all(14), children: [
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(children: [
-              AppChip('All intersections',
-                  selected: app.filter == null,
-                  onTap: () => app.update(() => app.filter = null)),
-              for (final i in app.intersections)
-                AppChip(i.name,
-                    selected: app.filter == i.id,
-                    onTap: () => app.update(() => app.filter = i.id)),
-            ]),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Text('${x.name}  |  ${x.lanes.length} cameras',
+                style: TextStyle(color: app.muted)),
           ),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(children: [
-              for (final e in _types.entries)
-                AppChip(e.key,
-                    selected: app.typeFilter == e.value,
-                    onTap: () => app.update(() => app.typeFilter = e.value)),
-            ]),
-          ),
-          const SizedBox(height: 10),
           LayoutBuilder(builder: (_, c) {
             final w = (c.maxWidth - 10) / 2;
             return Wrap(spacing: 10, runSpacing: 10, children: [
-              for (final i in list)
-                IntersectionSummaryCard(i, width: w, showMonitorLink: true),
+              for (final lane in x.lanes)
+                LaneSummaryCard(x, lane, width: w, showCameraLink: true),
             ]);
           }),
           const SizedBox(height: 14),
+          FilterChipRow(children: [
+            for (final e in _types.entries)
+              AppChip(e.key,
+                  selected: app.typeFilter == e.value,
+                  onTap: () => app.update(() => app.typeFilter = e.value)),
+          ]),
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: Text('${evs.length} events',

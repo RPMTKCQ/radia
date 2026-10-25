@@ -2,13 +2,19 @@ import '../models/decision.dart';
 import '../models/direction.dart';
 
 /// The agent's decision logic. Edit the green-time rule here only.
+///
+/// Input: vehicles detected per lane (one camera per lane, 2-4 lanes).
+/// North + South lanes share one signal phase, East + West the other.
+/// The busier phase gets green; lanes that are not configured count as 0.
 class TrafficAgent {
   static const minGreen = 5, yellow = 3, maxGreen = 60;
 
   static Decision decide(Map<Dir, int> c) {
-    final perceive = Dir.values.map((d) => '${d.short}${c[d]}').join(' ');
-    final ns = c[Dir.north]! + c[Dir.south]!;
-    final ew = c[Dir.east]! + c[Dir.west]!;
+    final perceive = c.entries.map((e) => '${e.key.short}${e.value}').join(' ');
+    int axis(bool ns) =>
+        c.entries.where((e) => e.key.isNS == ns).fold(0, (a, e) => a + e.value);
+    final ns = axis(true), ew = axis(false);
+
     if (ns + ew == 0) {
       return Decision(true, true, 0, '$perceive. No vehicles in range.',
           'No demand. Cars get flashing yellow.',

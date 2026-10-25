@@ -36,3 +36,10 @@ linter:
 
 # Additional information about this file can be found at
 # https://dart.dev/guides/language/analysis-options
+dependencies:
+  video_player: ^2.9.2
+  crypto: ^3.0.5
+
+flutter:
+  assets:
+    - assets/videos/

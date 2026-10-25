@@ -23,7 +23,7 @@ class EventCard extends StatelessWidget {
                 fg: idle ? Colors.black : Colors.white),
           ]),
           const SizedBox(height: 4),
-          Text('Intersection 0${e.intersection}  |  ${e.lane}',
+          Text('${app.intersection.name}  |  ${e.lane}',
               style:
                   const TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
           Text(e.message, style: TextStyle(color: app.muted)),
